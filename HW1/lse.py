@@ -11,9 +11,9 @@ def lse(A, b, _lambda):
     :return: prediction of coefficient of the line fitting function
     """
     # matrix transpose
-    AT=transpose(A)
+    AT = transpose(A)
     # matrix multiplication
-    ATA=matrix_multiplication(AT,A)
+    ATA = matrix_multiplication(AT, A)
 
     # identity matrix
     I = [[0 for y in range(len(ATA))] for x in range(len(ATA))]
@@ -29,14 +29,12 @@ def lse(A, b, _lambda):
             ATAlI[i][j] = ATA[i][j] + I[i][j]
 
     # LU decomposition
-    upper,lower=LU_decomposition(ATAlI)
+    upper, lower = LU_decomposition(ATAlI)
 
     # solve y: Ly=B
-    ATAlI_inv=inverse(upper,lower)
+    ATAlI_inv = inverse(upper, lower)
 
     # (A^T*A+LAMBDA*I)^(-1)*A^Tb
-    x=matrix_multiplication(ATAlI_inv,AT)
-    x=matrix_multiplication(x,b)
+    x = matrix_multiplication(ATAlI_inv, AT)
+    x = matrix_multiplication(x, b)
     return x
-
-
