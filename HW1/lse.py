@@ -1,31 +1,42 @@
-import numpy as np
+from utils import *
 
 
 # (A^T*A+LAMBDA*I)^(-1)*A^Tb
-def lse(A,b,_lambda):
-
+def lse(A, b, _lambda):
+    """lse
+    Implementing rLSE algorithm for line fitting
+    :param A: power of x matrix
+    :param b: original data points y axis
+    :param _lambda: regularization term
+    :return: prediction of coefficient of the line fitting function
+    """
     # matrix transpose
-    AT=[[0 for y in range(len(A))] for x in range(len(A[0]))]
-    for i in range(len(A)):
-        for j in range(len(A[0])):
-            AT[j][i]=A[i][j]
-
+    AT=transpose(A)
     # matrix multiplication
-    ATA=[[0 for y in range(len(A[0]))] for x in range(len(AT))]
-    for i in range(len(AT)):
-        for j in range(len(A[0])):
-            for k in range(len(A)):
-                ATA[i][j]+=AT[i][k]*A[k][j]
+    ATA=matrix_multiplication(AT,A)
 
     # identity matrix
-    I=[[0 for y in range(len(ATA))] for x in range(len(ATA))]
+    I = [[0 for y in range(len(ATA))] for x in range(len(ATA))]
     for i in range(len(ATA)):
         for j in range(len(ATA)):
-            if i==j:
-                I[i][j]=_lambda
+            if i == j:
+                I[i][j] = _lambda
 
     # matrix addition
-    ATAlI=[[0 for y in range(len(ATA))] for x in range(len(ATA))]
+    ATAlI = [[0 for y in range(len(ATA))] for x in range(len(ATA))]
     for i in range(len(ATA)):
         for j in range(len(ATA)):
-            ATAlI[i][j]=ATA[i][j]+I[i][j]
+            ATAlI[i][j] = ATA[i][j] + I[i][j]
+
+    # LU decomposition
+    upper,lower=LU_decomposition(ATAlI)
+
+    # solve y: Ly=B
+    ATAlI_inv=inverse(upper,lower)
+
+    # (A^T*A+LAMBDA*I)^(-1)*A^Tb
+    x=matrix_multiplication(ATAlI_inv,AT)
+    x=matrix_multiplication(x,b)
+    return x
+
+
