@@ -137,3 +137,5 @@ if __name__ == '__main__':
         ax2.plot(x_continuous, y_continuous)
         ax2.title.set_text("Newton's Method result")
         plt.show()
+
+        cases+=1
