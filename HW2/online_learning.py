@@ -17,6 +17,13 @@ def factorial(n):
 
 
 def draw_beta(X,a,b):
+    """
+    draw_beta: draw beta distribution by plotting points between [0,1]
+    :param X: all x between [0,1]
+    :param a: a param in beta distribution
+    :param b: b param in beta distribution
+    :return: beta dist value of X
+    """
     beta=np.zeros(len(X))
     for i,x in enumerate(X):
         beta[i]=x ** (a - 1) * (1 - x) ** (b - 1) * factorial(a + b - 1) / (factorial(a - 1) * factorial(b - 1))
@@ -36,6 +43,7 @@ if __name__=='__main__':
 
         # check if the folder exist (for saving distribution imags)
         folder="results/"+str(cases)
+        os.chmod("results",0o777)
         if os.path.isdir(folder):
             shutil.rmtree(folder)
         os.mkdir(folder)
@@ -65,6 +73,7 @@ if __name__=='__main__':
 
 
             X=np.linspace(0,1,100)
+            plt.figure(figsize=(15, 7.5))
 
             # draw prior
             prior=draw_beta(X,a_prior,b_prior)
@@ -94,10 +103,8 @@ if __name__=='__main__':
             # prior=posterior
             a_prior=a_posterior
             b_prior=b_posterior
-            break
             print("\n")
 
-        break
-        print("\n")
         cases+=1
+        print("\n")
 
