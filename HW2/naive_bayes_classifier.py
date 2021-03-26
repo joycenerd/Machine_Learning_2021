@@ -17,7 +17,7 @@ def data_preprocessing(image_path, label_path):
 
     # extract image and label
     image = np.zeros((num_of_data, rows, cols), dtype=int)
-    label = np.zeros((num_of_data), dtype=int)
+    label = np.zeros(num_of_data, dtype=int)
 
     for i in range(num_of_data):
         for j in range(rows):
@@ -33,7 +33,7 @@ def tally_freq(num_of_data, rows, cols, data):
     for i in range(num_of_data):
         for j in range(rows):
             for k in range(cols):
-                bin[i][j][k] = int(train_image[i][j][k] / 8)
+                bin[i][j][k] = int(data[i][j][k] / 8)
     return bin
 
 
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         for label in range(10):
             for px_idx in range(rows*cols):
                 for bin in range(32):
-                    if (prior[label] != 0):
+                    if prior[label] != 0:
                         likelihood[label][px_idx][bin] = float(bin_total[label][px_idx][bin] / class_cnt[label])
                     else:
                         likelihood[cls][px_idx][bin] = 1e-8
@@ -102,6 +102,9 @@ if __name__ == "__main__":
             all_posterior.append(posterior)
 
         # Print posterior
+        for i in range(10):
+            print(test_label[i],end=" ")
+        print("")
         err = 0.0
         for i,posterior in enumerate(all_posterior):
             print("Posterior (in log scale):")
@@ -109,7 +112,8 @@ if __name__ == "__main__":
                 print('{}: {}'.format(classes, class_prob))
             pred = np.argmin(posterior)
             label = test_label[i]
-            print("Prediction: {}, Ans: {}".format(pred, label))
+            if i<10:
+                print("Prediction: {}, Ans: {}".format(pred, label))
             if pred != label:
                 err += 1
 
