@@ -37,6 +37,16 @@ def tally_freq(num_of_data, rows, cols, data):
     return bin
 
 
+def get_prior(data_label,num_of_data):
+    class_cnt = np.zeros(10, dtype=np.double)
+    prior = np.zeros(10, dtype=np.double)
+    for label in data_label:
+        class_cnt[label] += 1
+    for i, classes in enumerate(class_cnt):
+        prior[i] = classes / num_of_data
+    return class_cnt,prior
+
+
 if __name__ == "__main__":
     # Read in training set
     train_image, train_label, num_of_train, rows, cols = data_preprocessing("./data/train-images-idx3-ubyte",
@@ -52,17 +62,13 @@ if __name__ == "__main__":
     print("rows:", rows)
     print("cols:", cols)
 
+    # calculate prior
+    class_cnt, prior = get_prior(train_label, num_of_train)
+
     toggle = input("Enter toggle option: ")
 
-    # Discrete case
+    # Discrete mode
     if toggle == "0":
-        # Calculate prior
-        class_cnt = np.zeros(10, dtype=np.double)
-        prior=np.zeros(10,dtype=np.double)
-        for label in train_label:
-            class_cnt[label] += 1
-        for i,classes in enumerate(class_cnt):
-             prior[i]=classes/num_of_train
 
         # gray level [0-255], convert to 32 bin
         train_bin = tally_freq(num_of_train, rows, cols, train_image)
@@ -138,3 +144,8 @@ if __name__ == "__main__":
         # print error rate
         err_rate = err / len(all_posterior)
         print(err_rate)
+
+    # Continuous mode
+     if toggle=="1":
+
+
