@@ -3,6 +3,12 @@ import math
 
 
 def data_preprocessing(image_path, label_path):
+    """
+    data_preprocessing: extract MNIST data and label from binary big endian file
+    :param image_path: the path of image data
+    :param label_path: the path of label data
+    :return: MNIST images and labels, total number of data, each image row and column counts
+    """
     # extract image header
     image_file = open(image_path, "rb")
     magic_num = int.from_bytes(image_file.read(4), byteorder="big")
@@ -29,6 +35,14 @@ def data_preprocessing(image_path, label_path):
 
 
 def tally_freq(num_of_data, rows, cols, data):
+    """
+    tally_freq: tally [0,255] into 32 discrete bins
+    :param num_of_data: total data counts
+    :param rows: the number of rows of each image
+    :param cols: the numbr of columns of each image
+    :param data: the original imag data
+    :return: 32 bins for each image
+    """
     bin = np.zeros((num_of_data, rows, cols), dtype=int)
     for i in range(num_of_data):
         for j in range(rows):
@@ -38,6 +52,12 @@ def tally_freq(num_of_data, rows, cols, data):
 
 
 def get_prior(data_label, num_of_data):
+    """
+    get_prior: the the prior (each_class/num_of_data)
+    :param data_label: ground truth label
+    :param num_of_data: number of training or testing data
+    :return: the total number of data in each class and prior of each class
+    """
     class_cnt = np.zeros(10, dtype=np.double)
     prior = np.zeros(10, dtype=np.double)
     for label in data_label:
@@ -48,6 +68,12 @@ def get_prior(data_label, num_of_data):
 
 
 def print_posterior_calc_error(test_label, all_posterior):
+    """
+    print_posterior_calc_error: print the calculated posterior, the prediction and ground truth label and calculate the error rate (predction!=label)
+    :param test_label: ground truth label
+    :param all_posterior: posterior of each image and all the possible class
+    :return: error rate
+    """
     err = 0.0
     for i, posterior in enumerate(all_posterior):
         print("Posterior (in log scale):")
@@ -63,8 +89,45 @@ def print_posterior_calc_error(test_label, all_posterior):
 
 
 def print_err(err, num_of_data):
+    """
+    print_err: print error rate
+    :param err: error rate
+    :param num_of_data: number of training or testing data
+    :return: no return value
+    """
     err_rate = err / num_of_data
     print("Error rate: " + str(err_rate))
+
+
+def get_posterior(mode,test_image,prior,likelihood=None,mean=None,variance=None):
+    """
+    get_posterior: calculate the posterior of every testing image
+    :param mode: discrete:0 or continuous:1
+    :param test_image: discrete: each image has 32 bins, continuous: all the original testing image
+    :param prior: the prior
+    :param likelihood: the likelihood in discrete mode
+    :param mean: mean of each pixel in each class (continuos mode)
+    :param variance: variance of each pixel in each class (continuous mode)
+    :return: all the posterior for every image every class (each image will have 10 possible class)
+    """
+    posterior_list = []
+
+    for n, px_list in enumerate(test_image):
+        posterior = np.zeros(10, dtype=np.double)
+        for c in range(10):
+            posterior[c] += math.log(max(1e-4,prior[c]))
+            for px_idx, px in enumerate(px_list):
+                if mode==0:
+                    posterior[c]+=math.log(max(1e-4, likelihood[c][px_idx][int(px)]))
+                elif mode==1:
+                    if variance[c][px_idx] == 0.0:  # prevent from divide by 0
+                        variance[c][px_idx] = 1e-8
+                    g = math.log(1.0 / math.sqrt(2.0 * math.pi * variance[c][px_idx])) - (
+                            (px - mean[c][px_idx]) ** 2 / (2.0 * variance[c][px_idx]))
+                    posterior[c] += g
+        posterior = posterior / np.sum(posterior)  # marginalize
+        posterior_list.append(posterior)
+    return posterior_list
 
 
 if __name__ == "__main__":
@@ -113,22 +176,12 @@ if __name__ == "__main__":
                         likelihood[cls][px_idx][bin] = 1e-8
 
         # Calculate posterior
-        all_posterior = []
         test_bin = tally_freq(num_of_test, rows, cols, test_image)
         test_bin = test_bin.reshape(num_of_test, -1)
-
-        for i, freqs in enumerate(test_bin):
-            posterior = np.zeros(10, dtype=np.double)
-            for classes in range(10):
-                log_likelihood = 0.0
-                for j, freq in enumerate(freqs):
-                    log_likelihood += math.log(max(1e-4, likelihood[classes][j][int(freq)]))
-                posterior[classes] = log_likelihood + math.log(max(1e-4, prior[classes]))
-            posterior /= np.sum(posterior)
-            all_posterior.append(posterior)
+        posterior_list=get_posterior(0,test_bin,prior,likelihood)
 
         # Print posterior
-        err = print_posterior_calc_error(test_label, all_posterior)
+        err = print_posterior_calc_error(test_label, posterior_list)
 
         # print imagination number --> from likelihood
         likelihood = likelihood.reshape(10, rows, cols, -1)
@@ -176,21 +229,9 @@ if __name__ == "__main__":
 
         # Calculate posterior
         test_image = test_image.reshape(num_of_test, -1)  # [10000,784]
-        posterior_list = []
+        posterior_list=get_posterior(1,test_image,prior,None,mean,variance)
 
-        for n, px_list in enumerate(test_image):
-            posterior = np.zeros(10, dtype=np.double)
-            for c in range(10):
-                posterior[c] += math.log(prior[c])
-                for px_idx, px in enumerate(px_list):
-                    if variance[c][px_idx] == 0.0:  # prevent from divide by 0
-                        variance[c][px_idx] = 1e-8
-                    g = math.log(1.0 / math.sqrt(2.0 * math.pi * variance[c][px_idx])) - (
-                            (px - mean[c][px_idx]) ** 2 / (2.0 * variance[c][px_idx]))
-                    posterior[c] += g
-            posterior = posterior / np.sum(posterior)  # marginalize
-            posterior_list.append(posterior)
-
+        # print posterior and calculate error rate
         err = print_posterior_calc_error(test_label, posterior_list)
 
         # print imagination number
@@ -206,4 +247,5 @@ if __name__ == "__main__":
                 print("")
             print("")
 
+        # print error rate
         print_err(err, num_of_test)
