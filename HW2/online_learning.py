@@ -37,7 +37,7 @@ if __name__=='__main__':
         a=input("Enter a: ")
         b=input("Enter b: ")
         f_case=1
-        f=open("testfile.txt","r")
+        f=open("data/testfile.txt", "r")
         a_prior=int(a)
         b_prior=int(b)
 
