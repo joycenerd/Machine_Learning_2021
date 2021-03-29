@@ -17,7 +17,7 @@ git clone \
   --sparse \
   https://github.com/joycenerd/NCTU-ML_2021 \
 ;
-cd NCTU-ML_2021-clone
+cd NCTU-ML_2021
 git sparse-checkout init --cone
 git sparse-checkout set HW2
 ```
@@ -98,15 +98,15 @@ If you want to use your own data:
 
 <table border="5" align="center">
     <tr>
-        <th><img src="./results/online_learning/online_learning_1.png"></th>
-        <th><img src="./results/online_learning/online_learning_2.png"></th>
+        <th><img src="./results/online_learning/online_learning_1.PNG"></th>
+        <th><img src="./results/online_learning/online_learning_2.PNG"></th>
     </tr>
 </table>
 
 ### Sample plots for online learning
 
 * m=N=1
-* <img src="https://render.githubusercontent.com/render/math?math=\alpha=2, \beta=3">
+* <img src="https://render.githubusercontent.com/render/math?math=\alpha=2, \beta=2">
 
 <table border="5" align="center" width="100%">
     <tr>
