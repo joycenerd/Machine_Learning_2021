@@ -17,7 +17,7 @@ git clone \
   --sparse \
   https://github.com/joycenerd/NCTU-ML_2021 \
 ;
-cd NCTU-ML_2021-clone
+cd NCTU-ML_2021
 git sparse-checkout init --cone
 git sparse-checkout set HW2
 ```
