@@ -106,7 +106,7 @@ If you want to use your own data:
 ### Sample plots for online learning
 
 * m=N=1
-* <img src="https://render.githubusercontent.com/render/math?math=\alpha=2, \beta=3">
+* <img src="https://render.githubusercontent.com/render/math?math=\alpha=2, \beta=2">
 
 <table border="5" align="center" width="100%">
     <tr>
