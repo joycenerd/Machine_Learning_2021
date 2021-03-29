@@ -46,6 +46,7 @@ if __name__=='__main__':
         os.chmod("results",0o777)
         if os.path.isdir(folder):
             shutil.rmtree(folder)
+        os.chmod("results",0o777)
         os.mkdir(folder)
         os.chmod(folder,0o777)
 
