@@ -98,8 +98,8 @@ If you want to use your own data:
 
 <table border="5" align="center">
     <tr>
-        <th><img src="./results/online_learning/online_learning_1.png"></th>
-        <th><img src="./results/online_learning/online_learning_2.png"></th>
+        <th><img src="./results/online_learning/online_learning_1.PNG"></th>
+        <th><img src="./results/online_learning/online_learning_2.PNG"></th>
     </tr>
 </table>
 
