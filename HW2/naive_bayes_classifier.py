@@ -147,105 +147,106 @@ if __name__ == "__main__":
 
     # calculate prior
     class_cnt, prior = get_prior(train_label, num_of_train)
+    
+    while True:
+        toggle = input("Enter toggle option: ")
 
-    toggle = input("Enter toggle option: ")
+        # Discrete mode
+        if toggle == "0":
 
-    # Discrete mode
-    if toggle == "0":
+            # gray level [0-255], convert to 32 bin
+            train_bin = tally_freq(num_of_train, rows, cols, train_image)
 
-        # gray level [0-255], convert to 32 bin
-        train_bin = tally_freq(num_of_train, rows, cols, train_image)
+            # Calculate likelihood
+            train_bin = train_bin.reshape(num_of_train, -1)  # [60000,784]
+            likelihood = np.zeros((10, rows * cols, 32), dtype=np.double)  # [10,784,32]
+            likelihood_sum = np.zeros((10, rows * cols))  # [10,784]
 
-        # Calculate likelihood
-        train_bin = train_bin.reshape(num_of_train, -1)  # [60000,784]
-        likelihood = np.zeros((10, rows * cols, 32), dtype=np.double)  # [10,784,32]
-        likelihood_sum = np.zeros((10, rows * cols))  # [10,784]
+            bin_total = np.zeros([10, rows * cols, 32], dtype=float)
+            for img_idx, label in enumerate(train_label):
+                for px_idx, value in enumerate(train_bin[img_idx]):
+                    bin_total[int(label)][px_idx][int(value)] += 1
 
-        bin_total = np.zeros([10, rows * cols, 32], dtype=float)
-        for img_idx, label in enumerate(train_label):
-            for px_idx, value in enumerate(train_bin[img_idx]):
-                bin_total[int(label)][px_idx][int(value)] += 1
+            likelihood = np.zeros([10, rows * cols, 32])
+            for label in range(10):
+                for px_idx in range(rows * cols):
+                    for bin in range(32):
+                        if prior[label] != 0:
+                            likelihood[label][px_idx][bin] = float(bin_total[label][px_idx][bin] / class_cnt[label])
+                        else:
+                            likelihood[cls][px_idx][bin] = 1e-8
 
-        likelihood = np.zeros([10, rows * cols, 32])
-        for label in range(10):
-            for px_idx in range(rows * cols):
-                for bin in range(32):
-                    if prior[label] != 0:
-                        likelihood[label][px_idx][bin] = float(bin_total[label][px_idx][bin] / class_cnt[label])
-                    else:
-                        likelihood[cls][px_idx][bin] = 1e-8
+            # Calculate posterior
+            test_bin = tally_freq(num_of_test, rows, cols, test_image)
+            test_bin = test_bin.reshape(num_of_test, -1)
+            posterior_list=get_posterior(0,test_bin,prior,likelihood)
 
-        # Calculate posterior
-        test_bin = tally_freq(num_of_test, rows, cols, test_image)
-        test_bin = test_bin.reshape(num_of_test, -1)
-        posterior_list=get_posterior(0,test_bin,prior,likelihood)
+            # Print posterior
+            err = print_posterior_calc_error(test_label, posterior_list)
 
-        # Print posterior
-        err = print_posterior_calc_error(test_label, posterior_list)
-
-        # print imagination number --> from likelihood
-        likelihood = likelihood.reshape(10, rows, cols, -1)
-        for i in range(10):
-            print(str(i) + ':')
-            for j in range(rows):
-                for k in range(cols):
-                    zero_prob = 0
-                    one_prob = 0
-                    for l in range(16):
-                        zero_prob += likelihood[i][j][k][l]
-                        one_prob += likelihood[i][j][k][l + 16]
-                    if zero_prob > one_prob:
-                        print('0', end=' ')
-                    else:
-                        print('1', end=' ')
+            # print imagination number --> from likelihood
+            likelihood = likelihood.reshape(10, rows, cols, -1)
+            for i in range(10):
+                print(str(i) + ':')
+                for j in range(rows):
+                    for k in range(cols):
+                        zero_prob = 0
+                        one_prob = 0
+                        for l in range(16):
+                            zero_prob += likelihood[i][j][k][l]
+                            one_prob += likelihood[i][j][k][l + 16]
+                        if zero_prob > one_prob:
+                            print('0', end=' ')
+                        else:
+                            print('1', end=' ')
+                    print('')
                 print('')
-            print('')
 
-        # print error rate
-        print_err(err, num_of_test)
+            # print error rate
+            print_err(err, num_of_test)
 
-    # Continuous mode
-    if toggle == "1":
-        # Calculate prior
-        class_cnt, prior = get_prior(train_label, num_of_train)
+        # Continuous mode
+        if toggle == "1":
+            # Calculate prior
+            class_cnt, prior = get_prior(train_label, num_of_train)
 
-        # Calculate likelihood
-        train_image = train_image.reshape((num_of_train, -1))  # [60000,784]
-        mean = np.zeros((10, rows * cols), dtype=np.double)  # [10,784]
-        variance = np.zeros((10, rows * cols), dtype=np.double)  # [10,784]
-        sum_of_train = np.zeros((10, rows * cols), dtype=np.double)  # [10,784]
+            # Calculate likelihood
+            train_image = train_image.reshape((num_of_train, -1))  # [60000,784]
+            mean = np.zeros((10, rows * cols), dtype=np.double)  # [10,784]
+            variance = np.zeros((10, rows * cols), dtype=np.double)  # [10,784]
+            sum_of_train = np.zeros((10, rows * cols), dtype=np.double)  # [10,784]
 
-        # get mean, variance
-        for i in range(num_of_train):
-            for j in range(rows * cols):
-                label = train_label[i]
-                sum_of_train[label][j] += train_image[i][j]
-                variance[label][j] += train_image[i][j] ** 2
+            # get mean, variance
+            for i in range(num_of_train):
+                for j in range(rows * cols):
+                    label = train_label[i]
+                    sum_of_train[label][j] += train_image[i][j]
+                    variance[label][j] += train_image[i][j] ** 2
 
-        for i in range(10):
-            for j in range(rows * cols):
-                mean[i][j] = sum_of_train[i][j] / class_cnt[i]
-                variance[i][j] = variance[i][j] / class_cnt[i] - (mean[i][j] ** 2) + 1000  # var=sum(x)^2/n-mean^2
+            for i in range(10):
+                for j in range(rows * cols):
+                    mean[i][j] = sum_of_train[i][j] / class_cnt[i]
+                    variance[i][j] = variance[i][j] / class_cnt[i] - (mean[i][j] ** 2) + 1000  # var=sum(x)^2/n-mean^2
 
-        # Calculate posterior
-        test_image = test_image.reshape(num_of_test, -1)  # [10000,784]
-        posterior_list=get_posterior(1,test_image,prior,None,mean,variance)
+            # Calculate posterior
+            test_image = test_image.reshape(num_of_test, -1)  # [10000,784]
+            posterior_list=get_posterior(1,test_image,prior,None,mean,variance)
 
-        # print posterior and calculate error rate
-        err = print_posterior_calc_error(test_label, posterior_list)
+            # print posterior and calculate error rate
+            err = print_posterior_calc_error(test_label, posterior_list)
 
-        # print imagination number
-        mean = mean.reshape((10, rows, cols))
-        for i in range(10):
-            print(str(i) + ":")
-            for j in range(rows):
-                for k in range(cols):
-                    if mean[i][j][k] < 128:
-                        print("0", end=" ")
-                    else:
-                        print("1", end=" ")
+            # print imagination number
+            mean = mean.reshape((10, rows, cols))
+            for i in range(10):
+                print(str(i) + ":")
+                for j in range(rows):
+                    for k in range(cols):
+                        if mean[i][j][k] < 128:
+                            print("0", end=" ")
+                        else:
+                            print("1", end=" ")
+                    print("")
                 print("")
-            print("")
 
-        # print error rate
-        print_err(err, num_of_test)
+            # print error rate
+            print_err(err, num_of_test)
