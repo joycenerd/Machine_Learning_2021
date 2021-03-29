@@ -39,3 +39,83 @@ If you want to use your own data:
 
 1. For **naive bayes classifier** you will need to modify the whole code file, but the structure will still be the same.
 2. For **online learning**, you can swap `testfile.txt` to you own data, but remember your data should still be binomial (0,1).
+
+## Results
+
+### Imagination Numbers
+
+<table border="5" bordercolor="red" align="center">
+    <tr>
+        <th>0</th>
+        <th colspan="2">1</th>
+        <th>2</th>
+    </tr>
+    <tr>
+        <td><img src="./results/imagination_num/0.png"></td>
+        <td colspan="2"><img src="./results/imagination_num/1.png"></td>
+        <td><img src="./results/imagination_num/2.png"></td>
+    </tr>
+    <tr>
+        <th>3</th>
+        <th colspan="2">4</th>
+        <th>5</th>
+    </tr>
+    <tr>
+        <td><img src="./results/imagination_num/3.png"></td>
+        <td colspan="2"><img src="./results/imagination_num/4.png"></td>
+        <td><img src="./results/imagination_num/5.png"></td>
+    </tr>
+    <tr>
+        <th>6</th>
+        <th colspan="2">7</th>
+        <th>8</th>
+    </tr>
+    <tr>
+        <td><img src="./results/imagination_num/6.png"></td>
+        <td colspan="2"><img src="./results/imagination_num/7.png"></td>
+        <td><img src="./results/imagination_num/8.png"></td>
+    </tr>
+    <tr>
+        <td colspan="2">9</td>
+        <td colspan="2"><img src="./results/imagination_num/9.png"></td>
+    </tr>
+</table>
+
+### Error rates for naive bayes classifier
+
+<table border="5" align="center">
+    <tr>
+        <th>Discrete</th>
+        <th>Continuous</th>
+    </tr>
+    <tr>
+        <td>15.18%</td>
+        <td>18.5%</td>
+    </tr>
+</table>
+
+### Online learning conjugate prior
+
+<table border="5" align="center">
+    <tr>
+        <th><img src="./results/online_learning/online_learning_1.png"></th>
+        <th><img src="./results/online_learning/online_learning_2.png"></th>
+    </tr>
+</table>
+
+### Sample plots for online learning
+
+* m=N=1
+* <img src="https://render.githubusercontent.com/render/math?math=\alpha=2, \beta=3">
+
+<table border="5" align="center" width="100%">
+    <tr>
+        <th>Prior  (<img src="https://render.githubusercontent.com/render/math?math=\alpha=2, \beta=2">)</th>
+        <th>Likelihood (0.5)</th>
+        <th>Posterior (<img src="https://render.githubusercontent.com/render/math?math=\alpha=3, \beta=2">)</th>
+    </tr>
+    <tr>
+        <td colspan="3"><img src="./results/online_learning/sample_plot.jpg"></td>
+    </tr>
+</table>
+
