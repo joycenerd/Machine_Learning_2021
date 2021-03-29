@@ -250,3 +250,4 @@ if __name__ == "__main__":
 
             # print error rate
             print_err(err, num_of_test)
+            print("")
