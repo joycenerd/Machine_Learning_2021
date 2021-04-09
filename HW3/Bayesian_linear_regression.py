@@ -14,25 +14,26 @@ if __name__ == '__main__':
     X_list = []
     Y_list = []
     while (1):
+        # generate polynomial random number
         pt_x, y = poly_data_gen(n, a, w)
         X_list.append(pt_x)
         Y_list.append(y)
 
         X = np.array([(pt_x ** deg) for deg in range(n)]).reshape(1, -1)
 
-        # posterior Λ = 1/a * X^T * X + (bI or S)
-        _lambda = float(1.0 / a) * X.T @ X + S
+        # posterior Λ = a * X^T * X + (bI or S)
+        _lambda = a * X.T @ X + S
         post_var = np.linalg.inv(_lambda)
 
-        # posterior μ = Λ^(-1)*(1/a * X^T * y + S * m)  # 1st iteration: S * m == 0
-        post_mean = np.linalg.inv(_lambda) @ (1.0 / a * X.T * y + S @ m)
+        # posterior μ = Λ^(-1)*(a * X^T * y + S * m)  # 1st iteration: S * m == 0
+        post_mean = np.linalg.inv(_lambda) @ (a * X.T * y + S @ m)
 
         old_pred_mean = pred_mean
         old_pred_var = pred_var
 
-        # predictive distribution ~ N(X*mu, a+X*Λ^(-1)*X^T)
+        # predictive distribution ~ N(X*mu, 1/a+X*Λ^(-1)*X^T)
         pred_mean = X @ post_mean
-        pred_var = a + X @ np.linalg.inv(_lambda) @ X.T
+        pred_var = 1.0/a + X @ np.linalg.inv(_lambda) @ X.T
 
         print('Add data point ({:.5f}, {:.5f}):\n'.format(pt_x, y))
         print('Posterior mean:')  # n x 1

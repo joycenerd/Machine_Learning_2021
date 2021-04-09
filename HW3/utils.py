@@ -16,6 +16,10 @@ def Gaussian_data_gen(mean, variance):
 
 
 def input_poly_basis():
+    """
+    input_poly_basis: input that is needed for polynomial basis linear model data generator
+    :return basis num, gaussian mean, polynomial coefficients
+    """
     n = int(input("Input n: "))
     a = float(input("Input a: "))
     w_str = input("Input w: ")

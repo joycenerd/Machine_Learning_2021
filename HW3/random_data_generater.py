@@ -3,10 +3,18 @@ from utils import Gaussian_data_gen, input_poly_basis
 
 
 def poly_data_gen(n, a, w):
+    """
+    poly_data_gen: polynomial basis linear model data generator
+    :param n: basis
+    :param a: Gaussian variance
+    :param w: polynomial coefficients
+    :return x in uniform distribution, y after polynomial calculation by plugging in x
+    """
     x = np.random.uniform(-1.0, 1.0)
     X = np.array([(x ** deg) for deg in range(n)]).reshape(-1)
     W = np.array(w).reshape(-1)
     e = Gaussian_data_gen(0, a)
+    # y=W.T*X+e
     return x, np.dot(np.transpose(W), X) + e
 
 
