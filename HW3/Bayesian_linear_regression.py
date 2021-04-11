@@ -67,7 +67,8 @@ if __name__ == '__main__':
             for j in range(n):
                 print('  {:.10f}'.format(post_var[i][j]), end=',')
             print()
-        print('\nPredictive distribution ~ N({:.5F}, {:.5F})'.format(pred_mean[0][0], pred_var[0][0]))
+        print('\nPredictive distribution ~ N({:.5F}, {:.5F})'.format(
+            pred_mean[0][0], pred_var[0][0]))
         print('-----------------------------------------------')
 
         if (cnt == 10):
@@ -85,6 +86,7 @@ if __name__ == '__main__':
 
     # When converge visualize the results
     X = np.linspace(-2.0, 2.0, 1000)
+    plt.figure(figsize=(8, 8))
 
     # plot ground truth
     Y = get_poly(X, w, n)
@@ -98,9 +100,10 @@ if __name__ == '__main__':
 
     # plot predict results
     plt.subplot(2, 2, 2)
+    Y, var = get_predictive_distribution(X, m_final, S_final, n, a)
     plt.plot(X, Y, color="black")
-    plt.plot(X, Y + a, color="red")
-    plt.plot(X, Y - a, color="red")
+    plt.plot(X, Y + var, color="red")
+    plt.plot(X, Y - var, color="red")
     plt.scatter(X_list, Y_list, color="tab:blue")
     plt.title("Predict result")
     plt.xlim(-2, 2)
@@ -114,6 +117,17 @@ if __name__ == '__main__':
     plt.plot(X, Y - var, color="red")
     plt.scatter(X_list[:10], Y_list[:10], color="tab:blue")
     plt.title("After 10 incomes")
+    plt.xlim(-2, 2)
+    plt.ylim(-20, 30)
+
+    # at the time that have seen 50 data points
+    plt.subplot(2, 2, 4)
+    Y, var = get_predictive_distribution(X, m_50, S_50, n, a)
+    plt.plot(X, Y, color="black")
+    plt.plot(X, Y + var, color="red")
+    plt.plot(X, Y - var, color="red")
+    plt.scatter(X_list[:50], Y_list[:50], color="tab:blue")
+    plt.title("After 50 incomes")
     plt.xlim(-2, 2)
     plt.ylim(-20, 30)
 
