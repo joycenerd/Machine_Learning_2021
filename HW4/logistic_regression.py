@@ -13,18 +13,22 @@ def data_gen(mean, variance, n):
     return data
 
 
+def sigmoid(x):
+    for i in range(x.shape[0]):
+        try:
+            x[i] = 1.0 / (1.0 + np.exp(-1.0 * x[i]))
+        except OverflowError:
+            x[i] = 0.0
+    return x
+
+
 def gradient_descent(num_iter, X, Y):
     num_of_data = X.shape[0]
     w = data_gen(0.0, 1.0, 3)  # [3,]
     for i in range(num_iter):
         # sigmoid
         z = X @ w
-        sigmoid_z = np.zeros(num_of_data)
-        for i, value in enumerate(z):
-            if value >= 0:
-                sigmoid_z[i] = 1.0 / 1 + np.exp(-value)
-            else:
-                sigmoid_z[i] = np.exp(value) / (1 + np.exp(value))
+        sigmoid_z = sigmoid(z)
 
         # backward
         gradient = X.T @ (Y - sigmoid_z)
@@ -32,16 +36,42 @@ def gradient_descent(num_iter, X, Y):
         w = w + gradient
         # print(w)
         if sum(abs(w - old_w)) < 1e-3:
-            print(f"Converge in {i}th iteration!")
+            print(f"Gradinet descent converge in {i}th iteration!")
             return w
     return w
 
 
-def newton_method(num_iter,X,Y):
-    num_of_data=X.shape[0]
-    w=data_gen(0.0,1.0,3)
-    for i in range(num_iter):
-        
+def get_hessian(X, w, z):
+    D = np.eye(X.shape[0])
+    for i in range(D.shape[0]):
+        try:
+            D[i][i] = np.exp(-1.0 * z[i]) / (1.0 + np.exp(-1.0 * z[i])) ** 2
+        except OverflowError:
+            D[i][i] = 0.0
+    hessian = X.T @ D @ X
+    return hessian
+
+
+def newton_method(num_iter, X, Y):
+    lr_rate = 0.01
+    # w = data_gen(0.0, 1.0, 3)  # [3,]
+    w = np.zeros(3, dtype=float)
+    for i in range(100000):
+        xw = X @ w
+        hessian = get_hessian(X, w, xw)
+        g = X.T @ (Y - sigmoid(xw))
+
+        if np.linalg.det(hessian) != 0:
+            # x1 = x0 + Hessian^(-1) * gradient
+            new_w = w + np.dot(np.linalg.inv(hessian), g)
+        else:
+            # use Steepest gradient descent singular when not invertible --> determinant == 0
+            new_w = w + lr_rate * g
+        if sum(abs(new_w - w)) < 1e-3:
+            print(f"Newton's method converge in {i}th iteration!")
+            return new_w
+        w = new_w
+    return new_w
 
 
 def get_predict_value(X, Y, w):
@@ -95,27 +125,105 @@ if __name__ == "__main__":
 
     # organizing data
     X = np.concatenate(
-        ([[x1[i], y1[i], 1.0] for i in range(N)], [[x2[i], y2[i], 1.0] for i in range(N)]), axis=0
+        (
+            [[x1[i], y1[i], 1.0] for i in range(N)],
+            [[x2[i], y2[i], 1.0] for i in range(N)],
+        ),
+        axis=0,
     )  # [N*2,3]
     label = np.concatenate((label_1, label_2))  # [N*2,1]
 
-    w = gradient_descent(100000, X, label)
-    pred_Y = get_predict_value(X, label, w)
-    tp, tn, fp, fn = get_confusion_matrix(label, pred_Y)
+    w_gradient = gradient_descent(100000, X, label)
+    pred_Y_gradient = get_predict_value(X, label, w_gradient)
+    tp_gradient, tn_gradient, fp_gradient, fn_gradient = get_confusion_matrix(
+        label, pred_Y_gradient
+    )
+
+    w_newton = newton_method(100000, X, label)
+    pred_Y_newton = get_predict_value(X, label, w_newton)
+    tp_newton, tn_newton, fp_newton, fn_newton = get_confusion_matrix(
+        label, pred_Y_newton
+    )
+
+    gradient_x1 = []
+    gradient_y1 = []
+    gradient_x2 = []
+    gradient_y2 = []
+
+    newton_x1 = []
+    newton_y1 = []
+    newton_x2 = []
+    newton_y2 = []
+
+    for i, [x, y, _] in enumerate(X):
+        if pred_Y_gradient[i] == 0.0:
+            gradient_x1.append(x)
+            gradient_y1.append(y)
+        else:
+            gradient_x2.append(x)
+            gradient_y2.append(y)
+
+        if pred_Y_newton[i] == 0.0:
+            newton_x1.append(x)
+            newton_y1.append(y)
+        else:
+            newton_x2.append(x)
+            newton_y2.append(y)
 
     # Output
     print("Gradient descent:\n")
     print("w:")
-    for value in w:
+    for value in w_gradient:
         print(f"\t{value}")
     print(f"Confusion Matrix:")
-    confusion_mat = [[tp, fn], [fp, tn]]
+    confusion_mat = [[tp_gradient, fn_gradient], [fp_gradient, tn_gradient]]
     header1 = ["Predict cluster 1", "Predict cluster 2"]
     header2 = ["Is cluster 1", "Is cluster 2"]
     print(pd.DataFrame(confusion_mat, header2, header1))
     print("")
-    print(f"Sensitivity (Successfully predict cluster 1): {float(tp)/(tp+fn)}")
-    print(f"Specificity (Successfully predict cluster 2): {float(tn)/(tn+fp)}")
+    print(
+        f"Sensitivity (Successfully predict cluster 1): {float(tp_gradient)/(tp_gradient+fn_gradient)}"
+    )
+    print(
+        f"Specificity (Successfully predict cluster 2): {float(tn_gradient)/(tn_gradient+fp_gradient)}"
+    )
     print("")
     print("----------------------------------------")
 
+    print("Newton's Method\n")
+    print("w:")
+    for value in w_newton:
+        print(f"\t{value}")
+    print(f"Confusion Matrix:")
+    confusion_mat = [[tp_newton, fn_newton], [fp_newton, tn_newton]]
+    header1 = ["Predict cluster 1", "Predict cluster 2"]
+    header2 = ["Is cluster 1", "Is cluster 2"]
+    print(pd.DataFrame(confusion_mat, header2, header1))
+    print("")
+    print(
+        f"Sensitivity (Successfully predict cluster 1): {float(tp_newton)/(tp_newton+fn_newton)}"
+    )
+    print(
+        f"Specificity (Successfully predict cluster 2): {float(tn_newton)/(tn_newton+fp_newton)}"
+    )
+    print("")
+    print("----------------------------------------")
+
+    # plot the result
+    # ground truth
+    plt.figure(figsize=(10, 8))
+    plt.subplot(1, 3, 1)
+    plt.scatter(x1, y1, c="b")
+    plt.scatter(x2, y2, c="r")
+    plt.title("Ground truth")
+    # gradient descent
+    plt.subplot(1, 3, 2)
+    plt.scatter(gradient_x1, gradient_y1, c="b")
+    plt.scatter(gradient_x2, gradient_y2, c="r")
+    plt.title("Gradient descent")
+    # newton's method
+    plt.subplot(1, 3, 3)
+    plt.scatter(newton_x1, newton_y1, c="b")
+    plt.scatter(newton_x2, newton_y2, c="r")
+    plt.title("Newton's method")
+    plt.show()
