@@ -10,8 +10,8 @@ import argparse
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--part2-kernel-type", type=str,
-                    default="RBF", help="choose the kernel type for part2")
+parser.add_argument("--kernel-type", type=str,
+                    default="rbf", help="choose the kernel type for part2")
 parser.add_argument("--part", type=int, default=3,
                     help="Which part do you want to execute")
 parser.add_argument("--gamma", type=float, default=0.05,
