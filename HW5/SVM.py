@@ -3,6 +3,7 @@ from libsvm.svmutil import *
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.spatial.distance import cdist
 import os
 import csv
 import argparse
@@ -11,6 +12,10 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--part2-kernel-type", type=str,
                     default="RBF", help="choose the kernel type for part2")
+parser.add_argument("--part", type=int, default=3,
+                    help="Which part do you want to execute")
+parser.add_argument("--gamma", type=float, default=0.05,
+                    help="Part 3 gamma value for self defined kernel")
 args = parser.parse_args()
 
 
@@ -103,6 +108,7 @@ def plot_confusion_mat(confusion_mat, cost, gamma, option):
     for val in gamma:
         gamma_param.append(str(val))
 
+    confusion_mat /= 100
     df = pd.DataFrame(confusion_mat, index=cost_param, columns=gamma_param)
     sns.heatmap(df, annot=True, cmap="YlGnBu", fmt=".2%")
     plt.xlabel("gamma")
@@ -118,6 +124,15 @@ def predict(X_train, Y_train, X_test, Y_test, param, _type):
     print(f"{_type} kernel with best parameters accuracy: {pred_acc[0]}%")
 
 
+def get_linear_rbf_kernel(x, x_prime, gamma):
+    linear_kernel = x@x_prime.T
+    rbf_kernel = np.exp(-gamma*cdist(x, x_prime, 'sqeuclidean'))
+    linear_rbf_kernel = linear_kernel+rbf_kernel
+    linear_rbf_kernel = np.hstack(
+        (np.arange(1, len(x)+1).reshape(-1, 1), linear_rbf_kernel))
+    return linear_rbf_kernel
+
+
 if __name__ == "__main__":
     X_train, Y_train, X_test, Y_test = read_data()
     Y_train = Y_train.ravel()
@@ -125,38 +140,48 @@ if __name__ == "__main__":
     print(f"Num of train: {len(X_train)}")
     print(f"Num of test: {len(X_test)}")
 
-    # Compare linear, polynomial and RBF kernel
-    # cmp_kernels(X_train, Y_train, X_test, Y_test)
+    # Part 1: Compare linear, polynomial and RBF kernel
+    if args.part == 1:
+        cmp_kernels(X_train, Y_train, X_test, Y_test)
 
-    # find the best param for C-SVC
-    option = args.part2_kernel_type
-    cost = [1, 10, 20, 30]
-    gamma = [0.01, 0.05, 0.1, 0.2]
-    degree = [2, 3, 4, 5]
-    coef0 = [0, 5, 10, 15]
+    # Part2: find the best param for C-SVC
+    elif args.part == 2:
+        option = args.part2_kernel_type
+        cost = [1, 10, 20, 30]
+        gamma = [0.01, 0.05, 0.1, 0.2]
+        degree = [2, 3, 4, 5]
+        coef0 = [0, 5, 10, 15]
 
-    if option == "rbf":
-        best_param, confusion_mat = grid_search(
-            X_train, Y_train, X_test, Y_test, cost, gamma, -1, -1, option
-        )
-        print(f"best cost: {best_param[0]}, best gamma: {best_param[1]}")
-        plot_confusion_mat(confusion_mat, cost, gamma, option)
-        param = f"-q -s 0 -t 2 -c {best_param[0]} -g {best_param[1]}"
-        predict(X_train, Y_train, X_test, Y_test, param)
+        if option == "rbf":
+            best_param, confusion_mat = grid_search(
+                X_train, Y_train, X_test, Y_test, cost, gamma, -1, -1, option
+            )
+            print(f"best cost: {best_param[0]}, best gamma: {best_param[1]}")
+            plot_confusion_mat(confusion_mat, cost, gamma, option)
+            param = f"-q -s 0 -t 2 -c {best_param[0]} -g {best_param[1]}"
+            predict(X_train, Y_train, X_test, Y_test, param, option)
 
-    elif option == "linear":
-        best_param, _ = grid_search(
-            X_train, Y_train, X_test, Y_test, cost, -1, -1, -1, option
-        )
-        print(f"best cost: {best_param[0]}")
-        param = f"-q -s 0 -t 0 -c {best_param[0]}"
-        predict(X_train, Y_train, X_test, Y_test, param)
+        elif option == "linear":
+            best_param, _ = grid_search(
+                X_train, Y_train, X_test, Y_test, cost, -1, -1, -1, option
+            )
+            print(f"best cost: {best_param[0]}")
+            param = f"-q -s 0 -t 0 -c {best_param[0]}"
+            predict(X_train, Y_train, X_test, Y_test, param, option)
 
-    elif option == "polynomial":
-        best_param, _ = grid_search(
-            X_train, Y_train, X_test, Y_test, cost, gamma, degree, coef0, option
-        )
-        print(
-            f"best cost: {best_param[0]}, best gamma: {best_param[1]}, best degree: {best_param[2]}, best coeff0: {best_param[3]}")
-        param = f"-q -s 0 -t 1 -c {best_param[0]} -g {best_param[1]} -d {best_param[2]} -r {best_param[3]}"
-        predict(X_train, Y_train, X_test, Y_test, param, option)
+        elif option == "polynomial":
+            best_param, _ = grid_search(
+                X_train, Y_train, X_test, Y_test, cost, gamma, degree, coef0, option
+            )
+            print(
+                f"best cost: {best_param[0]}, best gamma: {best_param[1]}, best degree: {best_param[2]}, best coeff0: {best_param[3]}")
+            param = f"-q -s 0 -t 1 -c {best_param[0]} -g {best_param[1]} -d {best_param[2]} -r {best_param[3]}"
+            predict(X_train, Y_train, X_test, Y_test, param, option)
+
+    # Part3: self-defined kernel: linear+rbf
+    elif args.part == 3:
+        train_kernel = get_linear_rbf_kernel(X_train, X_train, args.gamma)
+        test_kernel = get_linear_rbf_kernel(X_test, X_train, args.gamma)
+        param = "-q -t 4"
+        predict(train_kernel, Y_train, test_kernel,
+                Y_test, param, "linear+rbf")
