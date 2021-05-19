@@ -25,6 +25,7 @@ SAVE_PATH = "./results/"
 
 def get_kernel(img, h, w):
     img = img.reshape(h * w, c)
+    img=img/255.0
 
     # color similarity
     pix_dist = cdist(img, img, "sqeuclidean")
@@ -35,6 +36,7 @@ def get_kernel(img, h, w):
         for j in range(h):
             coor.append([i, j])
     coor = np.array(coor, dtype=float)
+    coor=coor/100.0
     spatial_dist = cdist(coor, coor, "sqeuclidean")
 
     # e^-gamma_s*spatial_dist x e^-gamma_c*color_dist
@@ -78,17 +80,17 @@ def run(h, w, gram_matrix):
         third_term = np.zeros(K, dtype=float)
         for k in range(K):
             third_term[k] = np.sum(gram_matrix[alpha == k, :][:, alpha == k])
-        _third = _third / (C ** 2)
+        third_term = third_term / (C ** 2)
 
-        new_alpha = np.argmin(first_term - second_term + third_term, axis=1)
+        new_alpha = np.argmin(first_term + second_term + third_term, axis=1)
+        all_alpha.append(new_alpha)
 
         if np.array_equal(alpha, new_alpha):
             print(f"Converge in {iter}th iterations!")
             break
         alpha = new_alpha
-        all_alpha.append(alpha)
 
-        print(f"Iteration #{iter} complete...")
+        #print(f"Iteration #{iter} complete...")
 
     return all_alpha
 
@@ -102,7 +104,6 @@ def plot_result(all_alpha, img_name):
     for i in range(len(all_alpha)):
         out_img = color[all_alpha[i]]
         out_img = out_img.reshape((h, w, 3))
-        print(out_img)
         plt.imsave(f"{save_dir}/{img_name}_{i}.png", out_img)
         imgs.append(Image.fromarray(np.uint8(out_img * 255)))
     imgs[0].save(f'{save_dir}/video.gif', format='GIF',
@@ -124,4 +125,3 @@ if __name__ == "__main__":
         img_name += f'_{args.clusters}'
         plot_result(all_alpha, img_name)
         print("Plotting complete...")
-        break
