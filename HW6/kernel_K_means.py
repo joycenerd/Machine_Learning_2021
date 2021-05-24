@@ -16,7 +16,10 @@ parser.add_argument("--gamma-c", type=float, default=2.5,
                     help="hyperparameter gamma_c in the kernel")
 parser.add_argument("--iterations", type=int, default=50,
                     help="Maximum iteration for K-means")
+parser.add_argument("--init-mode", type=str, default="k-means++",
+                    help="initialize cluster mode")
 args = parser.parse_args()
+print(' '.join(f'{k}={v}' for k, v in vars(args).items()))
 
 
 DATA_PATH = "./data/"
@@ -25,7 +28,7 @@ SAVE_PATH = "./results/"
 
 def get_kernel(img, h, w):
     img = img.reshape(h * w, c)
-    img=img/255.0
+    img = img/255.0
 
     # color similarity
     pix_dist = cdist(img, img, "sqeuclidean")
@@ -36,7 +39,7 @@ def get_kernel(img, h, w):
         for j in range(h):
             coor.append([i, j])
     coor = np.array(coor, dtype=float)
-    coor=coor/100.0
+    coor = coor/100.0
     spatial_dist = cdist(coor, coor, "sqeuclidean")
 
     # e^-gamma_s*spatial_dist x e^-gamma_c*color_dist
@@ -48,17 +51,48 @@ def get_kernel(img, h, w):
     return gram_matrix
 
 
-def init_cluster(h, w):
-    cluster = np.random.randint(args.clusters, size=h * w)
+def init_cluster(h, w, img):
+    if args.init_mode == "random":
+        cluster = np.random.randint(args.clusters, size=h * w)
+    elif args.init_mode == "nearest_neighbor":
+        coor = []
+        for i in range(w):
+            for j in range(h):
+                coor.append([i, j])
+        coor = np.array(coor, dtype=float)
+        coor = coor/100.0
+        center = np.random.choice(h*w, size=args.clusters)
+        center_idx = coor[center]
+        dist = cdist(center_idx, coor, metric="sqeuclidean")
+        cluster = np.argmin(dist, axis=0)
+    elif args.init_mode == "k-means++":
+        # 1. Choose one center uniformly at random among the data points.
+        # 2. For each data point x not chosen yet, compute D(x), the distance between x and the nearest center that has already been chosen.
+        # 3. Choose one new data point at random as a new center, using a weighted probability distribution where a point x is chosen with probability proportional to D(x)2.
+        # 4. Repeat Steps 2 and 3 until k centers have been chosen.
+        img = img.reshape(-1, 3)
+        img = img/255.0
+        first_mean = np.random.choice(h*w, size=1)
+        center = np.full(args.clusters, first_mean, dtype=int)
+        center_val = img[center]
+        for i in range(1, args.clusters):
+            dist = cdist(center_val, img, metric="sqeuclidean")
+            min_dist = np.min(dist, axis=0)
+            center[i] = np.random.choice(
+                h*w, size=1, p=min_dist**2/np.sum(min_dist**2))
+            center_val = img[center]
+
+        dist = cdist(center_val, img, metric="sqeuclidean")
+        cluster = np.argmin(dist, axis=0)
     return cluster
 
 
-def run(h, w, gram_matrix):
+def run(h, w, gram_matrix, img):
     K = args.clusters
     all_alpha = []
 
     # initialize the clusters
-    alpha = init_cluster(h, w)
+    alpha = init_cluster(h, w, img)
     all_alpha.append(alpha.reshape(h, w))
 
     # Kernel K-means
@@ -90,7 +124,7 @@ def run(h, w, gram_matrix):
             break
         alpha = new_alpha
 
-        #print(f"Iteration #{iter} complete...")
+        # print(f"Iteration #{iter} complete...")
 
     return all_alpha
 
@@ -106,7 +140,8 @@ def plot_result(all_alpha, img_name):
         out_img = out_img.reshape((h, w, 3))
         plt.imsave(f"{save_dir}/{img_name}_{i}.png", out_img)
         imgs.append(Image.fromarray(np.uint8(out_img * 255)))
-    imgs[0].save(f'{save_dir}/video.gif', format='GIF',
+    video_path = SAVE_PATH+"video/"+img_name+".gif"
+    imgs[0].save(video_path, format='GIF',
                  append_images=imgs[1:], loop=0, save_all=True, duration=300)
 
 
@@ -121,7 +156,7 @@ if __name__ == "__main__":
         h, w, c = img.shape
         gram_matrix = get_kernel(img, h, w)
         print("Get gram matrix complete...")
-        all_alpha = run(h, w, gram_matrix)
-        img_name += f'_{args.clusters}'
+        all_alpha = run(h, w, gram_matrix, img)
+        img_name += f'_k{args.clusters}_{args.init_mode}'
         plot_result(all_alpha, img_name)
         print("Plotting complete...")
