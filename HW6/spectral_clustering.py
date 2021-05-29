@@ -60,7 +60,6 @@ def get_kernel(img, h, w):
         spatial_dist = cdist(coor, coor, metric="minkowski", p=1)
         gram_matrix = np.multiply(
             np.exp(-1 / sigma * spatial_dist), np.exp(-1/sigma * pix_dist))
-        print("finish gram matrix")
 
     return gram_matrix
 
@@ -222,7 +221,7 @@ if __name__ == "__main__":
         W = get_kernel(img, h, w)
         L = get_graph_Laplacian(W)
         T = eigen_decomposition(img_name, L)
-        #all_alpha = run(T, h, w, img)
-        #plot_result(all_alpha, img_name, T)
+        all_alpha = run(T, h, w, img)
+        plot_result(all_alpha, img_name, T)
 
-    #print(f"--- {time.time()-start_time} seconds ---")
+    print(f"--- {time.time()-start_time} seconds ---")
