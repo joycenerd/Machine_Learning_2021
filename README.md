@@ -7,3 +7,4 @@ This repo is for ML homework in the spring semester studying in NCTU.
 - [Logistic Regression and EM Algorithm](./HW4)
 - [Gaussian Process and SVM](./HW5)
 - [Kernel K-means and Spectral Clustering](./HW6)
+- [Kernel Eigenface and t-SNE](./HW7)
