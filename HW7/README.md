@@ -25,7 +25,7 @@ Download [Yale Face Database](http://vision.ucsd.edu/content/yale-face-database)
 
 ```
 python kernel_eigenface.py
-pythn t-SNE.py
+python t-SNE.py
 ```
 
 ## Experimental Results
