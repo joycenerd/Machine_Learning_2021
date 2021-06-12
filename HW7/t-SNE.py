@@ -36,7 +36,7 @@ parser.add_argument("--perplexity", type=int, default=50,
 args = parser.parse_args()
 
 
-DATA_PATH = "/eva_data/zchin/data/"
+DATA_PATH = "./zchin/data/"
 SAVE_PATH = "./results/"
 
 

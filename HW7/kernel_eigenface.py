@@ -26,7 +26,7 @@ parser.add_argument("--degree", type=int, default=20,
 args = parser.parse_args()
 
 
-DATA_PATH = "/eva_data/zchin/Yale_Face_Database/"
+DATA_PATH = "./Yale_Face_Database/"
 SAVE_PATH = "./results/"
 
 
@@ -55,20 +55,13 @@ def read_data(data_path):
 
 def get_eig(data, method, kernel_type="none"):
     # get eigenvalue and eigenvector by np.linalg.eig()
-    eigval_file = DATA_PATH+method+"_"+kernel_type+"_eigval.npy"
-    eigvec_file = DATA_PATH+method+"_"+kernel_type+"_eigvec.npy"
 
-    """if os.path.isfile(eigval_file) and os.path.isfile(eigvec_file):
-        eigval = np.load(eigval_file)
-        eigvec = np.load(eigvec_file)
-    else:"""
     eigval, eigvec = eig(data)
     # sort by decreasing order of eigenvalues
     idx = eigval.argsort()[::-1]
     eigval = eigval[idx]
     eigvec = eigvec[:, idx]
-    np.save(eigval_file, eigval)
-    np.save(eigvec_file, eigvec)
+
 
     return eigval, eigvec
 
