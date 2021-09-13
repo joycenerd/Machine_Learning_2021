@@ -1,6 +1,6 @@
 # Regularized Linear Model Regression
 
-Code for ML homewwork#1. This is a program that can do regularized (polynomial basis) and visulaize the result. I used two method: lse and Newton's method.
+Code for ML homework#1. This is a program that can do regularized (polynomial basis) and visulaize the result. I used two method: lse and Newton's method.
 
 ## Table of Contents
 

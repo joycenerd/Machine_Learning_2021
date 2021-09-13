@@ -6,7 +6,7 @@ This project surrounds MLE (Maximum Likelihood Estimation). The first part of th
 
 ## Getting Started
 
-This repository has all the code and data you need to replicate out results. But before you continue you will need a conda environment with Python>=3.7.
+This repository has all the code and data you need to replicate our results. But before you continue you will need a conda environment with Python>=3.7.
 
 ### 1. Clone the project
 
@@ -38,7 +38,7 @@ python online_learning.py
 If you want to use your own data:
 
 1. For **naive bayes classifier** you will need to modify the whole code file, but the structure will still be the same.
-2. For **online learning**, you can swap `testfile.txt` to you own data, but remember your data should still be binomial (0,1).
+2. For **online learning**, you can swap `testfile.txt` to your own data, but remember your data should still be binomial (0,1).
 
 ## Results
 
